@@ -1,0 +1,28 @@
+# skill-composer-mcp 配置文件示例
+# 放置在项目根目录的 .skill-composer/config.yaml 中
+
+security:
+  allow_read_only: true
+  allowed_roots:
+    - "~/.claude/skills"
+    - "~/.cursor/skills"
+    - "./.skills"
+  forbidden_dirs:
+    - "/etc"
+    - "/usr"
+    - "~/.ssh"
+
+output:
+  default_mode: "diff"  # diff / temp / persist
+  max_history: 20
+  storage_dir: "~/.composed_skills"
+
+llm:
+  provider: "ollama"  # ollama / openai / anthropic
+  model: "qwen2.5:7b"
+  # api_key: "your-api-key"  # 仅 openai/anthropic 需要
+  # base_url: "http://localhost:11434"
+
+parser:
+  fallback_to_llm: false
+  frontmatter_schema: "claude"  # claude / generic
