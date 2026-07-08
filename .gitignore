@@ -28,5 +28,9 @@ htmlcov/
 .composed_skills/
 composed_skills/
 
+# Skills and tests
+skills/
+tests/
+
 # Lock file (auto-generated, not needed for this project)
 uv.lock
