@@ -39,13 +39,19 @@ class SkillComposer:
         parser: SkillParser,
         analyzer: SkillAnalyzer,
         security: SecurityGuard,
-        composed_skills_dir: str = "~/.composed_skills",
+        composed_skills_dir: str = "./composed_skills",
+        conflict_rules: list[tuple[set[str], str]] | None = None,
     ):
         self._loader = loader
         self._parser = parser
         self._analyzer = analyzer
         self._security = security
         self._composed_dir = Path(os.path.expanduser(composed_skills_dir))
+        # 技术栈互斥规则：(互斥集合, 标签) — 用于冲突检测
+        self._conflict_rules = conflict_rules or [
+            ({"selenium", "playwright"}, "浏览器自动化"),
+            ({"requests", "httpx", "aiohttp"}, "HTTP 客户端"),
+        ]
 
     def load_skill(self, skill_name: str) -> SkillMeta:
         """加载并解析一个技能"""
@@ -286,12 +292,14 @@ class SkillComposer:
                 source_skill, dim
             )
 
+            # 执行沙箱测试：静态兼容性分析
+            sandbox_report = self._sandbox_test(base_skill, dim_modules, dim)
+
             steps.append(
                 EvolutionStep(
                     dimension=dim,
                     status="sandboxing",
-                    sandbox_result=f"提取源技能 '{dimension_labels.get(dim, dim)}' 相关模块: "
-                    f"{', '.join(m.name for m in dim_modules) if dim_modules else '无'}",
+                    sandbox_result=sandbox_report,
                     merged_modules=[m.name for m in dim_modules],
                 )
             )
@@ -309,13 +317,9 @@ class SkillComposer:
         self, skill: SkillMeta, dimension: str
     ) -> list:
         """查找技能中与指定维度相关的模块"""
-        if not hasattr(self._analyzer, "_DIMENSION_KEYWORDS"):
+        all_kw = self._analyzer.get_dimension_keywords(dimension)
+        if not all_kw:
             return []
-
-        keywords = self._analyzer._DIMENSION_KEYWORDS.get(dimension, {})
-        all_kw: set[str] = set()
-        for kw_list in keywords.values():
-            all_kw.update(k.lower() for k in kw_list)
 
         matched: list = []
         for mod in skill.modules:
@@ -436,12 +440,8 @@ class SkillComposer:
         # 检测技术栈冲突（不同技能使用不同实现方式）
         base_stack = set(base.tech_stack)
         for cand in additions:
-            # 检测互斥技术栈
-            mutually_exclusive = [
-                ({"selenium", "playwright"}, "浏览器自动化"),
-                ({"requests", "httpx", "aiohttp"}, "HTTP 客户端"),
-            ]
-            for exclusive_set, label in mutually_exclusive:
+            # 检测互斥技术栈（规则来自构造参数 self._conflict_rules）
+            for exclusive_set, label in self._conflict_rules:
                 base_match = base_stack & exclusive_set
                 cand_match = set(cand.tech_stack) & exclusive_set
                 if base_match and cand_match and base_match != cand_match:

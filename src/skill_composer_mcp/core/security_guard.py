@@ -22,7 +22,7 @@ class SecurityGuard:
         allowed_roots: list[str] | None = None,
         forbidden_dirs: list[str] | None = None,
         allow_read_only: bool = True,
-        composed_skills_dir: str = "~/.composed_skills",
+        composed_skills_dir: str = "./composed_skills",
     ):
         self._allowed_roots: list[Path] = []
         if allowed_roots:
@@ -114,20 +114,12 @@ class SecurityGuard:
 
     def check_path_traversal(self, path: str) -> bool:
         """
-        检查路径遍历攻击。
-        解析真实路径后再次校验白名单。
+        检查路径是否在白名单内（即非遍历攻击）。
+        白名单与符号链接解析已由 resolve_path 完成，此处仅作布尔封装。
         """
         try:
-            resolved = self.resolve_path(path)
-            # 二次校验：使用 os.path.realpath 解析符号链接
-            real = Path(os.path.realpath(resolved))
-            for root in self._allowed_roots:
-                try:
-                    real.relative_to(root)
-                    return True
-                except ValueError:
-                    continue
-            return False
+            self.resolve_path(path)
+            return True
         except SecurityViolation:
             return False
 

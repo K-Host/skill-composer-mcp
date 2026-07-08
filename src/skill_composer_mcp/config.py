@@ -96,7 +96,7 @@ class OutputConfig(BaseModel):
 
     default_mode: str = "diff"  # diff / temp / persist
     max_history: int = 20
-    storage_dir: str = "~/.composed_skills"
+    storage_dir: str = "./composed_skills"
 
 
 class LLMConfig(BaseModel):
@@ -112,8 +112,8 @@ class AppConfig(BaseModel):
     """应用主配置"""
 
     skill_paths: list[str] = Field(default_factory=list)
-    composed_skills_dir: str = "~/.composed_skills"
-    pattern_library_path: str = "~/.composed_skills/pattern-library.json"
+    composed_skills_dir: str = "./composed_skills"
+    pattern_library_path: str = "./composed_skills/pattern-library.json"
     security: SecurityConfig = Field(default_factory=SecurityConfig)
     parser: ParserConfig = Field(default_factory=ParserConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
@@ -171,7 +171,7 @@ def load_config(config_file: ConfigFile | None = None, **overrides: Any) -> AppC
     skill_paths = _default_skill_paths(config_file)
     composed_dir = os.environ.get(
         "SKILL_COMPOSER_COMPOSED_SKILLS_DIR",
-        os.environ.get("COMPOSED_SKILLS_DIR", "~/.composed_skills"),
+        os.environ.get("COMPOSED_SKILLS_DIR", "./composed_skills"),
     )
 
     config_data: dict[str, Any] = {

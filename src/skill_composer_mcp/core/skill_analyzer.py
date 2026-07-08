@@ -91,6 +91,17 @@ class SkillAnalyzer:
         },
     }
 
+    def get_dimension_keywords(self, dimension: str) -> set[str]:
+        """
+        公开接口：获取某维度相关的全部关键词（小写）。
+        供 SkillComposer 在渐进式注入时查找维度相关模块使用。
+        """
+        keywords = self._DIMENSION_KEYWORDS.get(dimension, {})
+        all_kw: set[str] = set()
+        for kw_list in keywords.values():
+            all_kw.update(k.lower() for k in kw_list)
+        return all_kw
+
     def analyze(
         self, skill: SkillMeta, extract_patterns: bool = True
     ) -> dict:
@@ -101,6 +112,9 @@ class SkillAnalyzer:
         six_dim = self._six_dimension_analysis(skill)
         reverse = self._reverse_engineer(skill)
         patterns = self._extract_patterns(skill) if extract_patterns else []
+
+        # 去重：提取的模式可能与技能自身 design_patterns 重叠
+        merged_patterns = list(dict.fromkeys(patterns + skill.design_patterns))
 
         return {
             "name": skill.name,
@@ -116,7 +130,7 @@ class SkillAnalyzer:
                 }
                 for m in skill.modules
             ],
-            "design_patterns": patterns + skill.design_patterns,
+            "design_patterns": merged_patterns,
             "module_count": len(skill.modules),
             "hash": skill.hash[:8] if skill.hash else "",
             "six_dimension": six_dim.model_dump(),
