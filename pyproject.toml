@@ -55,8 +55,8 @@ dev = [
 skill-composer-mcp = "skill_composer_mcp.server:main"
 
 [project.urls]
-Homepage = "https://github.com/skill-composer/skill-composer-mcp"
-Repository = "https://github.com/skill-composer/skill-composer-mcp"
+Homepage = "https://github.com/K-Host/skill-composer-mcp"
+Repository = "https://github.com/K-Host/skill-composer-mcp"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/skill_composer_mcp"]

@@ -26,3 +26,6 @@ htmlcov/
 
 # Composed skills
 .composed_skills/
+
+# Lock file (auto-generated, not needed for this project)
+uv.lock
